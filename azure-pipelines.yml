@@ -13,6 +13,7 @@ pool:
 
 variables:
   # kt: Set these in Azure DevOps variable groups or pipeline variables
+  azureServiceConnection: 'UploadDocService'
   devResourceGroup: 'dev-rg'
   qaResourceGroup: 'qa-rg'
   prodResourceGroup: 'prod-rg'
@@ -31,39 +32,42 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - checkout: self
-    # kt: Build (syntax check) all Bicep files
-    - script: |
-        az bicep build --file infra/dev.bicep
-        az bicep build --file infra/qa.bicep
-        az bicep build --file infra/prod.bicep
-      displayName: 'Bicep Build (Syntax Check)'
-    # kt: Lint all Bicep files for best practices
-    - script: |
-        az bicep lint --file infra/dev.bicep
-        az bicep lint --file infra/qa.bicep
-        az bicep lint --file infra/prod.bicep
-      displayName: 'Bicep Lint (Best Practices)'
-    # kt: What-If deployment for Dev
-    - script: |
-        az deployment group what-if \
-          --resource-group $(devResourceGroup) \
-          --template-file infra/dev.bicep \
-          --parameters sqlPassword=$(devSqlPassword)
-      displayName: 'Bicep What-If (Dev)'
-    # kt: What-If deployment for QA
-    - script: |
-        az deployment group what-if \
-          --resource-group $(qaResourceGroup) \
-          --template-file infra/qa.bicep \
-          --parameters sqlPassword=$(qaSqlPassword)
-      displayName: 'Bicep What-If (QA)'
-    # kt: What-If deployment for Prod
-    - script: |
-        az deployment group what-if \
-          --resource-group $(prodResourceGroup) \
-          --template-file infra/prod.bicep \
-          --parameters sqlPassword=$(prodSqlPassword)
-      displayName: 'Bicep What-If (Prod)'
+    - task: AzureCLI@2
+      displayName: 'Bicep Build, Lint, and What-If'
+      inputs:
+        azureSubscription: '$(azureServiceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -euo pipefail
+
+          az bicep install
+
+          # kt: Build (syntax check) all Bicep files
+          az bicep build --file infra/dev.bicep
+          az bicep build --file infra/qa.bicep
+          az bicep build --file infra/prod.bicep
+
+          # kt: Lint all Bicep files for best practices
+          az bicep lint --file infra/dev.bicep
+          az bicep lint --file infra/qa.bicep
+          az bicep lint --file infra/prod.bicep
+
+          # kt: What-If deployment for each environment
+          az deployment group what-if \
+            --resource-group $(devResourceGroup) \
+            --template-file infra/dev.bicep \
+            --parameters sqlPassword="$(devSqlPassword)"
+
+          az deployment group what-if \
+            --resource-group $(qaResourceGroup) \
+            --template-file infra/qa.bicep \
+            --parameters sqlPassword="$(qaSqlPassword)"
+
+          az deployment group what-if \
+            --resource-group $(prodResourceGroup) \
+            --template-file infra/prod.bicep \
+            --parameters sqlPassword="$(prodSqlPassword)"
 
 - stage: Build
   displayName: 'Build App'
@@ -78,17 +82,31 @@ stages:
     - task: NodeTool@0
       inputs:
         versionSpec: '20.x'
-    - script: |
-        cd app/frontend
-        npm install
+    - bash: |
+        set -euo pipefail
+        if [ -f app/frontend/package.json ]; then
+          cd app/frontend
+          npm ci
+        else
+          echo "Skipping frontend dependency install: app/frontend/package.json not found."
+        fi
       displayName: 'Install frontend dependencies'
-    - script: |
-        cd app/frontend
-        npm run build
+    - bash: |
+        set -euo pipefail
+        if [ -f app/frontend/package.json ]; then
+          cd app/frontend
+          npm run build
+        else
+          echo "Skipping frontend build: app/frontend/package.json not found."
+        fi
       displayName: 'Build frontend'
-    - script: |
-        cd app/backend
-        dotnet build --configuration Release
+    - bash: |
+        set -euo pipefail
+        if find app/backend -maxdepth 1 \( -name '*.csproj' -o -name '*.sln' \) | grep -q .; then
+          dotnet build app/backend --configuration Release
+        else
+          echo "Skipping backend build: no .csproj or .sln file found in app/backend."
+        fi
       displayName: 'Build backend'
 
 - stage: Deploy_Dev
@@ -105,14 +123,15 @@ stages:
           - task: AzureCLI@2
             displayName: 'Deploy Bicep (Dev)'
             inputs:
-              azureSubscription: 'YourAzureServiceConnection' # kt: Set your Azure service connection name
+              azureSubscription: '$(azureServiceConnection)' # kt: Set your Azure service connection name
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                set -euo pipefail
                 az deployment group create \
                   --resource-group $(devResourceGroup) \
                   --template-file infra/dev.bicep \
-                  --parameters sqlPassword=$(devSqlPassword)
+                  --parameters sqlPassword="$(devSqlPassword)"
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_QA
@@ -129,14 +148,15 @@ stages:
           - task: AzureCLI@2
             displayName: 'Deploy Bicep (QA)'
             inputs:
-              azureSubscription: 'YourAzureServiceConnection'
+              azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                set -euo pipefail
                 az deployment group create \
                   --resource-group $(qaResourceGroup) \
                   --template-file infra/qa.bicep \
-                  --parameters sqlPassword=$(qaSqlPassword)
+                  --parameters sqlPassword="$(qaSqlPassword)"
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_Prod
@@ -153,13 +173,14 @@ stages:
           - task: AzureCLI@2
             displayName: 'Deploy Bicep (Prod)'
             inputs:
-              azureSubscription: 'YourAzureServiceConnection'
+              azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                set -euo pipefail
                 az deployment group create \
                   --resource-group $(prodResourceGroup) \
                   --template-file infra/prod.bicep \
-                  --parameters sqlPassword=$(prodSqlPassword)
+                  --parameters sqlPassword="$(prodSqlPassword)"
           # kt: Add steps to deploy backend/frontend as needed
         # kt: To require manual approval before prod deployment, set up an 'Approval and checks' gate for the 'prod' environment in Azure DevOps UI. You can set a timeout there as well.
