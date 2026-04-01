@@ -1,0 +1,113 @@
+# kt: GitHub Actions CI/CD pipeline for Azure Bicep multi-environment deployment
+# kt: This workflow deploys infrastructure and app for dev, qa (auto), and prod (with manual approval)
+# kt: Each environment uses its own Bicep file and resource group
+# kt: Add your Azure credentials as GitHub secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_CLIENT_SECRET
+
+name: Azure Multi-Env CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - name: Install frontend dependencies
+        run: |
+          cd app/frontend
+          npm install
+      - name: Build frontend
+        run: |
+          cd app/frontend
+          npm run build
+      - name: Build backend
+        run: |
+          cd app/backend
+          dotnet build --configuration Release
+
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      - name: Deploy Bicep (Dev)
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: dev-rg
+          template: infra/dev.bicep
+          parameters: sqlPassword=${{ secrets.DEV_SQL_PASSWORD }}
+      # kt: Add steps to deploy backend/frontend as needed
+
+  deploy-qa:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: qa
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      - name: Deploy Bicep (QA)
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: qa-rg
+          template: infra/qa.bicep
+          parameters: sqlPassword=${{ secrets.QA_SQL_PASSWORD }}
+      # kt: Add steps to deploy backend/frontend as needed
+
+  deploy-prod:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: https://your-prod-url
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+      - name: Wait for Change Review Approval
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: user1,user2 # kt: Replace with your GitHub usernames
+          minimum-approvals: 1
+          timeout-minutes: 60 # kt: Set approval timeout as needed
+      - name: Deploy Bicep (Prod)
+        uses: azure/arm-deploy@v2
+        with:
+          resourceGroupName: prod-rg
+          template: infra/prod.bicep
+          parameters: sqlPassword=${{ secrets.PROD_SQL_PASSWORD }}
+      # kt: Add steps to deploy backend/frontend as needed

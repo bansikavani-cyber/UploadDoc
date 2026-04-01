@@ -1,0 +1,121 @@
+# kt: Azure DevOps Pipeline for Multi-Environment Bicep Deployment
+# kt: This pipeline builds and deploys to dev and qa automatically, and to prod with manual approval (pre-deployment gate)
+# kt: Each environment uses its own Bicep file and resource group
+# kt: Set your Azure service connection and variable groups for secrets
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # kt: Set these in Azure DevOps variable groups or pipeline variables
+  devResourceGroup: 'dev-rg'
+  qaResourceGroup: 'qa-rg'
+  prodResourceGroup: 'prod-rg'
+  devSqlPassword: '$(DEV_SQL_PASSWORD)'
+  qaSqlPassword: '$(QA_SQL_PASSWORD)'
+  prodSqlPassword: '$(PROD_SQL_PASSWORD)'
+
+stages:
+- stage: Build
+  displayName: 'Build App'
+  jobs:
+  - job: Build
+    steps:
+    - checkout: self
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '8.0.x'
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+    - script: |
+        cd app/frontend
+        npm install
+      displayName: 'Install frontend dependencies'
+    - script: |
+        cd app/frontend
+        npm run build
+      displayName: 'Build frontend'
+    - script: |
+        cd app/backend
+        dotnet build --configuration Release
+      displayName: 'Build backend'
+
+- stage: Deploy_Dev
+  displayName: 'Deploy to Dev'
+  dependsOn: Build
+  jobs:
+  - deployment: DeployDev
+    environment: 'dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep (Dev)'
+            inputs:
+              azureSubscription: 'YourAzureServiceConnection' # kt: Set your Azure service connection name
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group create \
+                  --resource-group $(devResourceGroup) \
+                  --template-file infra/dev.bicep \
+                  --parameters sqlPassword=$(devSqlPassword)
+          # kt: Add steps to deploy backend/frontend as needed
+
+- stage: Deploy_QA
+  displayName: 'Deploy to QA'
+  dependsOn: Build
+  jobs:
+  - deployment: DeployQA
+    environment: 'qa'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep (QA)'
+            inputs:
+              azureSubscription: 'YourAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group create \
+                  --resource-group $(qaResourceGroup) \
+                  --template-file infra/qa.bicep \
+                  --parameters sqlPassword=$(qaSqlPassword)
+          # kt: Add steps to deploy backend/frontend as needed
+
+- stage: Deploy_Prod
+  displayName: 'Deploy to Prod'
+  dependsOn: Build
+  jobs:
+  - deployment: DeployProd
+    environment: 'prod'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureCLI@2
+            displayName: 'Deploy Bicep (Prod)'
+            inputs:
+              azureSubscription: 'YourAzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group create \
+                  --resource-group $(prodResourceGroup) \
+                  --template-file infra/prod.bicep \
+                  --parameters sqlPassword=$(prodSqlPassword)
+          # kt: Add steps to deploy backend/frontend as needed
+        # kt: To require manual approval before prod deployment, set up an 'Approval and checks' gate for the 'prod' environment in Azure DevOps UI. You can set a timeout there as well.
