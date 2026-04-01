@@ -21,6 +21,50 @@ variables:
   prodSqlPassword: '$(PROD_SQL_PASSWORD)'
 
 stages:
+# kt: Validate_Bicep stage runs Bicep build, lint, and what-if for all environments before any deployment.
+- stage: Validate_Bicep
+  displayName: 'Validate and Test Bicep Files'
+  jobs:
+  - job: ValidateBicep
+    displayName: 'Bicep Syntax, Lint, and What-If'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - checkout: self
+    # kt: Build (syntax check) all Bicep files
+    - script: |
+        az bicep build --file infra/dev.bicep
+        az bicep build --file infra/qa.bicep
+        az bicep build --file infra/prod.bicep
+      displayName: 'Bicep Build (Syntax Check)'
+    # kt: Lint all Bicep files for best practices
+    - script: |
+        az bicep lint --file infra/dev.bicep
+        az bicep lint --file infra/qa.bicep
+        az bicep lint --file infra/prod.bicep
+      displayName: 'Bicep Lint (Best Practices)'
+    # kt: What-If deployment for Dev
+    - script: |
+        az deployment group what-if \
+          --resource-group $(devResourceGroup) \
+          --template-file infra/dev.bicep \
+          --parameters sqlPassword=$(devSqlPassword)
+      displayName: 'Bicep What-If (Dev)'
+    # kt: What-If deployment for QA
+    - script: |
+        az deployment group what-if \
+          --resource-group $(qaResourceGroup) \
+          --template-file infra/qa.bicep \
+          --parameters sqlPassword=$(qaSqlPassword)
+      displayName: 'Bicep What-If (QA)'
+    # kt: What-If deployment for Prod
+    - script: |
+        az deployment group what-if \
+          --resource-group $(prodResourceGroup) \
+          --template-file infra/prod.bicep \
+          --parameters sqlPassword=$(prodSqlPassword)
+      displayName: 'Bicep What-If (Prod)'
+
 - stage: Build
   displayName: 'Build App'
   jobs:
@@ -49,7 +93,7 @@ stages:
 
 - stage: Deploy_Dev
   displayName: 'Deploy to Dev'
-  dependsOn: Build
+  dependsOn: [Build, Validate_Bicep]
   jobs:
   - deployment: DeployDev
     environment: 'dev'
@@ -73,7 +117,7 @@ stages:
 
 - stage: Deploy_QA
   displayName: 'Deploy to QA'
-  dependsOn: Build
+  dependsOn: [Build, Validate_Bicep]
   jobs:
   - deployment: DeployQA
     environment: 'qa'
@@ -97,7 +141,7 @@ stages:
 
 - stage: Deploy_Prod
   displayName: 'Deploy to Prod'
-  dependsOn: Build
+  dependsOn: [Build, Validate_Bicep]
   jobs:
   - deployment: DeployProd
     environment: 'prod'
