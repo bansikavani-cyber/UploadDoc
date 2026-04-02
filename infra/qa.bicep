@@ -1,7 +1,7 @@
 @secure()
 param sqlPassword string
 
-param location string = 'centralindia'
+param location string = 'eastus'
 
 // App Service Plan (LOW COST - B1)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
