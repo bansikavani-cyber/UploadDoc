@@ -1,7 +1,8 @@
 // kt: Bicep template for Prod environment
 // kt: Provisions Storage Account, App Service, and Azure SQL Database for production
 param location string = resourceGroup().location
-param storageAccountName string = 'produploadstorage${uniqueString(resourceGroup().id)}'
+// Shortened prefix to keep storage account name <=24 chars
+param storageAccountName string = 'prodstg${uniqueString(resourceGroup().id)}'
 param appServicePlanName string = 'prod-appserviceplan'
 param webAppName string = 'prod-uploadapp'
 param sqlServerName string = 'prod-sqlserver${uniqueString(resourceGroup().id)}'
@@ -30,8 +31,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: appServicePlanName
   location: location
   sku: {
-    name: 'F1'
-    tier: 'Free'
+    name: 'B1'
+    tier: 'Basic'
   }
 }
 

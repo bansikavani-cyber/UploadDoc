@@ -1,7 +1,8 @@
 // kt: Bicep template for QA environment
 // kt: Provisions Storage Account, App Service, and Azure SQL Database for QA
 param location string = resourceGroup().location
-param storageAccountName string = 'qauploadstorage${uniqueString(resourceGroup().id)}'
+// Shortened prefix to keep storage account name <=24 chars
+param storageAccountName string = 'qastg${uniqueString(resourceGroup().id)}'
 param appServicePlanName string = 'qa-appserviceplan'
 param webAppName string = 'qa-uploadapp'
 param sqlServerName string = 'qa-sqlserver${uniqueString(resourceGroup().id)}'
@@ -30,8 +31,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
   name: appServicePlanName
   location: location
   sku: {
-    name: 'F1'
-    tier: 'Free'
+    name: 'B1'
+    tier: 'Basic'
   }
 }
 
