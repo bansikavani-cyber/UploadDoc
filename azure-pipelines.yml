@@ -42,6 +42,10 @@ stages:
         inlineScript: |
           set -euo pipefail
 
+          export DEV_SQL_PASSWORD="$(devSqlPassword)"
+          export QA_SQL_PASSWORD="$(qaSqlPassword)"
+          export PROD_SQL_PASSWORD="$(prodSqlPassword)"
+
           az bicep install
 
           echo "creation: starting (resource groups)"
@@ -67,7 +71,7 @@ stages:
           az deployment group create \
             --resource-group $(devResourceGroup) \
             --template-file infra/dev.bicep \
-            --parameters sqlPassword=$(devSqlPassword) \
+            --parameters sqlPassword="$DEV_SQL_PASSWORD" \
             --confirm-with-what-if --no-prompt
           echo "##[endgroup]"
           echo "creation: completed (what-if dev)"
@@ -76,7 +80,7 @@ stages:
           az deployment group create \
             --resource-group $(qaResourceGroup) \
             --template-file infra/qa.bicep \
-            --parameters sqlPassword=$(qaSqlPassword) \
+            --parameters sqlPassword="$QA_SQL_PASSWORD" \
             --confirm-with-what-if --no-prompt
           echo "##[endgroup]"
           echo "creation: completed (what-if qa)"
@@ -85,7 +89,7 @@ stages:
           az deployment group create \
             --resource-group $(prodResourceGroup) \
             --template-file infra/prod.bicep \
-            --parameters sqlPassword=$(prodSqlPassword) \
+            --parameters sqlPassword="$PROD_SQL_PASSWORD" \
             --confirm-with-what-if --no-prompt
           echo "##[endgroup]"
           echo "creation: completed (what-if prod)"
@@ -142,42 +146,26 @@ stages:
           steps:
           - checkout: self
           - task: AzureCLI@2
-            displayName: 'App Service - In Progress (Dev)'
+            displayName: 'Deploy Dev (App Service + SQL)'
             inputs:
               azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                echo "##[section]App Service Deployment (Dev)"
+                export DEV_SQL_PASSWORD="$(devSqlPassword)"
+                echo "##[section]Deploy Dev (App Service + SQL)"
                 echo "App Service - In Progress"
-                echo "##[group]App Service Deployment"
-                az deployment group create \
-                  --resource-group $(devResourceGroup) \
-                  --template-file infra/dev.bicep \
-                  --parameters sqlPassword=$(devSqlPassword)
-                echo "##[endgroup]"
-                echo "App Service - Completed"
-                echo "##[section]App Service Deployment Completed"
-
-          - task: AzureCLI@2
-            displayName: 'SQL - In Progress (Dev)'
-            inputs:
-              azureSubscription: '$(azureServiceConnection)'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                set -euo pipefail
-                echo "##[section]SQL Deployment (Dev)"
                 echo "SQL - In Progress"
-                echo "##[group]SQL Deployment"
+                echo "##[group]Deployment"
                 az deployment group create \
                   --resource-group $(devResourceGroup) \
                   --template-file infra/dev.bicep \
-                  --parameters sqlPassword=$(devSqlPassword)
+                  --parameters sqlPassword="$DEV_SQL_PASSWORD"
                 echo "##[endgroup]"
                 echo "SQL - Completed"
-                echo "##[section]SQL Deployment Completed"
+                echo "App Service - Completed"
+                echo "##[section]Deploy Dev Completed"
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_QA
@@ -192,42 +180,26 @@ stages:
           steps:
           - checkout: self
           - task: AzureCLI@2
-            displayName: 'App Service - In Progress (QA)'
+            displayName: 'Deploy QA (App Service + SQL)'
             inputs:
               azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                echo "##[section]App Service Deployment (QA)"
+                export QA_SQL_PASSWORD="$(qaSqlPassword)"
+                echo "##[section]Deploy QA (App Service + SQL)"
                 echo "App Service - In Progress"
-                echo "##[group]App Service Deployment"
-                az deployment group create \
-                  --resource-group $(qaResourceGroup) \
-                  --template-file infra/qa.bicep \
-                  --parameters sqlPassword=$(qaSqlPassword)
-                echo "##[endgroup]"
-                echo "App Service - Completed"
-                echo "##[section]App Service Deployment Completed"
-
-          - task: AzureCLI@2
-            displayName: 'SQL - In Progress (QA)'
-            inputs:
-              azureSubscription: '$(azureServiceConnection)'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                set -euo pipefail
-                echo "##[section]SQL Deployment (QA)"
                 echo "SQL - In Progress"
-                echo "##[group]SQL Deployment"
+                echo "##[group]Deployment"
                 az deployment group create \
                   --resource-group $(qaResourceGroup) \
                   --template-file infra/qa.bicep \
-                  --parameters sqlPassword=$(qaSqlPassword)
+                  --parameters sqlPassword="$QA_SQL_PASSWORD"
                 echo "##[endgroup]"
                 echo "SQL - Completed"
-                echo "##[section]SQL Deployment Completed"
+                echo "App Service - Completed"
+                echo "##[section]Deploy QA Completed"
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_Prod
@@ -242,41 +214,25 @@ stages:
           steps:
           - checkout: self
           - task: AzureCLI@2
-            displayName: 'App Service - In Progress (Prod)'
+            displayName: 'Deploy Prod (App Service + SQL)'
             inputs:
               azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                echo "##[section]App Service Deployment (Prod)"
+                export PROD_SQL_PASSWORD="$(prodSqlPassword)"
+                echo "##[section]Deploy Prod (App Service + SQL)"
                 echo "App Service - In Progress"
-                echo "##[group]App Service Deployment"
-                az deployment group create \
-                  --resource-group $(prodResourceGroup) \
-                  --template-file infra/prod.bicep \
-                  --parameters sqlPassword=$(prodSqlPassword)
-                echo "##[endgroup]"
-                echo "App Service - Completed"
-                echo "##[section]App Service Deployment Completed"
-
-          - task: AzureCLI@2
-            displayName: 'SQL - In Progress (Prod)'
-            inputs:
-              azureSubscription: '$(azureServiceConnection)'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                set -euo pipefail
-                echo "##[section]SQL Deployment (Prod)"
                 echo "SQL - In Progress"
-                echo "##[group]SQL Deployment"
+                echo "##[group]Deployment"
                 az deployment group create \
                   --resource-group $(prodResourceGroup) \
                   --template-file infra/prod.bicep \
-                  --parameters sqlPassword=$(prodSqlPassword)
+                  --parameters sqlPassword="$PROD_SQL_PASSWORD"
                 echo "##[endgroup]"
                 echo "SQL - Completed"
-                echo "##[section]SQL Deployment Completed"
+                echo "App Service - Completed"
+                echo "##[section]Deploy Prod Completed"
           # kt: Add steps to deploy backend/frontend as needed
         # kt: To require manual approval before prod deployment, set up an 'Approval and checks' gate for the 'prod' environment in Azure DevOps UI. You can set a timeout there as well.
