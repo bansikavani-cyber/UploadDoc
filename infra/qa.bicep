@@ -1,15 +1,15 @@
 @secure()
 param sqlPassword string
 
-param location string = 'eastus'
+param location string = 'australiaeast'
 
 // App Service Plan (LOW COST - B1)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: 'qa-plan'
   location: location
   sku: {
-    name: 'F1'
-    tier: 'Free'
+    name: 'B1'
+    tier: 'Basic'
   }
 }
 

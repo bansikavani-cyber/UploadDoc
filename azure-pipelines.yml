@@ -14,7 +14,7 @@ pool:
 variables:
   # kt: Set these in Azure DevOps variable groups or pipeline variables
   azureServiceConnection: 'UploadDocService'
-  location: 'eastus'
+  location: 'australiaeast'
   devResourceGroup: 'dev-rg'
   qaResourceGroup: 'qa-rg'
   prodResourceGroup: 'prod-rg'
