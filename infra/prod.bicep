@@ -36,6 +36,34 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
+// Frontend Web App (shares plan)
+resource frontendWebApp 'Microsoft.Web/sites@2023-01-01' = {
+  name: 'prod-frontend-${uniqueString(resourceGroup().id)}'
+  location: location
+  tags: tags
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    clientAffinityEnabled: false
+    siteConfig: {
+      minTlsVersion: '1.2'
+      ftpsState: 'Disabled'
+      alwaysOn: true
+      http20Enabled: true
+      // For static SPA hosting; remove if deploying a node app
+      metadata: [
+        {
+          name: 'CURRENT_STACK'
+          value: 'static'
+        }
+      ]
+    }
+  }
+}
+
 // SQL Server
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {
   name: 'prod-sql-${uniqueString(resourceGroup().id)}'

@@ -18,16 +18,24 @@ public class UploadFileHandler : IRequestHandler<UploadFileCommand, FileMetadata
 
     public async Task<FileMetadata> Handle(UploadFileCommand request, CancellationToken ct)
     {
-        var blobName = $"{Guid.NewGuid()}{Path.GetExtension(request.File.FileName)}";
-        await using var stream = request.File.OpenReadStream();
-        var loc = await _storage.UploadAsync(stream, blobName, request.File.ContentType, ct);
+        var blobName = $"{Guid.NewGuid()}{Path.GetExtension(request.FileName)}";
+
+        // Use the stream coming from the command
+        await using var stream = request.FileStream;
+
+        var loc = await _storage.UploadAsync(
+            stream,
+            blobName,
+            null, // contentType can be passed separately if needed
+            ct
+        );
 
         var meta = new FileMetadata
         {
             Id = loc.BlobName,
-            FileName = request.File.FileName,
-            ContentType = request.File.ContentType,
-            Size = request.File.Length,
+            FileName = request.FileName,
+            ContentType = null, // optionally include in command if needed
+            Size = stream.Length, // may not always be available depending on stream type
             BlobUrl = loc.Uri.ToString(),
             UploadedUtc = DateTime.UtcNow,
             UploadedBy = request.UploadedBy

@@ -7,7 +7,13 @@ public class UploadFileCommandValidator : AbstractValidator<UploadFileCommand>
 {
     public UploadFileCommandValidator()
     {
-        RuleFor(x => x.File).NotNull();
-        RuleFor(x => x.File.Length).GreaterThan(0);
+        RuleFor(x => x.FileStream)
+            .NotNull()
+            .Must(stream => stream.CanRead)
+            .WithMessage("File stream must be readable.");
+
+        RuleFor(x => x.FileName)
+            .NotEmpty()
+            .WithMessage("File name is required.");
     }
 }

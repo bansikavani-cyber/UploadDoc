@@ -1,0 +1,6 @@
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.csproj.AssemblyReference.cache
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.AssemblyInfoInputs.cache
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.AssemblyInfo.cs
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.csproj.CoreCompileInputs.cache
+C:\Projects\UploadDoc\app\backend\src\UploadDoc.Core\obj\Debug\net8.0\UploadDoc.Core.sourcelink.json
