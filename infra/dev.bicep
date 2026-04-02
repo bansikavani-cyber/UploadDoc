@@ -23,7 +23,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
 }
 
 // SQL Server
-resource sqlServer 'Microsoft.Sql/servers@2022-11-01' = {
+resource sqlServer 'Microsoft.Sql/servers@2023-08-01' = {
   name: 'dev-sql-${uniqueString(resourceGroup().id)}'
   location: location
   properties: {
@@ -33,8 +33,9 @@ resource sqlServer 'Microsoft.Sql/servers@2022-11-01' = {
 }
 
 // SQL Database (cheap tier)
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-11-01' = {
-  name: '${sqlServer.name}/devdb'
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01' = {
+  parent: sqlServer
+  name: 'devdb'
   location: location
   sku: {
     name: 'Basic'
