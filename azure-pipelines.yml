@@ -15,9 +15,9 @@ variables:
   # kt: Set these in Azure DevOps variable groups or pipeline variables
   azureServiceConnection: 'UploadDocService'
   location: 'australiaeast'
-  devResourceGroup: 'dev-rg'
-  qaResourceGroup: 'qa-rg'
-  prodResourceGroup: 'prod-rg'
+  devResourceGroup: 'dev-rg-ae'
+  qaResourceGroup: 'qa-rg-ae'
+  prodResourceGroup: 'prod-rg-ae'
   devSqlPassword: $(DEV_SQL_PASSWORD)
   qaSqlPassword: $(QA_SQL_PASSWORD)
   prodSqlPassword: $(PROD_SQL_PASSWORD)
