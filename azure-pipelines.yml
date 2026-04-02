@@ -72,29 +72,29 @@ stages:
           echo "creation: completed (bicep build & lint)"
 
           echo "##[group]What-if Dev (App Service + SQL)"
-          az deployment group create \
+          az deployment group what-if \
             --resource-group $(devResourceGroup) \
             --template-file infra/dev.bicep \
             --parameters sqlPassword="$DEV_SQL_PASSWORD" \
-            --confirm-with-what-if --no-prompt
+            --no-pretty-print
           echo "##[endgroup]"
           echo "creation: completed (what-if dev)"
 
           echo "##[group]What-if QA (App Service + SQL)"
-          az deployment group create \
+          az deployment group what-if \
             --resource-group $(qaResourceGroup) \
             --template-file infra/qa.bicep \
             --parameters sqlPassword="$QA_SQL_PASSWORD" \
-            --confirm-with-what-if --no-prompt
+            --no-pretty-print
           echo "##[endgroup]"
           echo "creation: completed (what-if qa)"
 
           echo "##[group]What-if Prod (App Service + SQL)"
-          az deployment group create \
+          az deployment group what-if \
             --resource-group $(prodResourceGroup) \
             --template-file infra/prod.bicep \
             --parameters sqlPassword="$PROD_SQL_PASSWORD" \
-            --confirm-with-what-if --no-prompt
+            --no-pretty-print
           echo "##[endgroup]"
           echo "creation: completed (what-if prod)"
       env:
