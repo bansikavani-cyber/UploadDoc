@@ -135,12 +135,12 @@ stages:
               azureSubscription: '$(azureServiceConnection)' # kt: Set your Azure service connection name
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
-            inlineScript: |
-              set -euo pipefail
-              az deployment group create \
-                --resource-group $(devResourceGroup) \
-                --template-file infra/dev.bicep \
-                --parameters sqlPassword=$(devSqlPassword)
+              inlineScript: |
+                set -euo pipefail
+                az deployment group create \
+                  --resource-group $(devResourceGroup) \
+                  --template-file infra/dev.bicep \
+                  --parameters sqlPassword=$(devSqlPassword)
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_QA
@@ -160,12 +160,12 @@ stages:
               azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
-            inlineScript: |
-              set -euo pipefail
-              az deployment group create \
-                --resource-group $(qaResourceGroup) \
-                --template-file infra/qa.bicep \
-                --parameters sqlPassword=$(qaSqlPassword)
+              inlineScript: |
+                set -euo pipefail
+                az deployment group create \
+                  --resource-group $(qaResourceGroup) \
+                  --template-file infra/qa.bicep \
+                  --parameters sqlPassword=$(qaSqlPassword)
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_Prod
@@ -185,11 +185,11 @@ stages:
               azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
-            inlineScript: |
-              set -euo pipefail
-              az deployment group create \
-                --resource-group $(prodResourceGroup) \
-                --template-file infra/prod.bicep \
-                --parameters sqlPassword=$(prodSqlPassword)
+              inlineScript: |
+                set -euo pipefail
+                az deployment group create \
+                  --resource-group $(prodResourceGroup) \
+                  --template-file infra/prod.bicep \
+                  --parameters sqlPassword=$(prodSqlPassword)
           # kt: Add steps to deploy backend/frontend as needed
         # kt: To require manual approval before prod deployment, set up an 'Approval and checks' gate for the 'prod' environment in Azure DevOps UI. You can set a timeout there as well.
