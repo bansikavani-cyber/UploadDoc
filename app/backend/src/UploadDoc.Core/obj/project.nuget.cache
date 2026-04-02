@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "Tq+q/5y2RX4=",
+  "success": true,
+  "projectFilePath": "C:\\Projects\\UploadDoc\\app\\backend\\src\\UploadDoc.Core\\UploadDoc.Core.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\subha\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
+    "C:\\Users\\subha\\.nuget\\packages\\mediatr\\12.1.1\\mediatr.12.1.1.nupkg.sha512",
+    "C:\\Users\\subha\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
+    "C:\\Users\\subha\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\6.0.0\\microsoft.extensions.dependencyinjection.abstractions.6.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

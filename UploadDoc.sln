@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{F95F473B-E98A-ACD6-1986-755F447BE36F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{F1C03477-FB42-63FE-39FD-AEF02E061287}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{65D9C1F2-D865-B7E6-3236-3B006EAA463E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploadDoc.Core", "app\backend\src\UploadDoc.Core\UploadDoc.Core.csproj", "{ADA32443-9B87-91C2-8B2A-907E3289CFD2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ADA32443-9B87-91C2-8B2A-907E3289CFD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADA32443-9B87-91C2-8B2A-907E3289CFD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADA32443-9B87-91C2-8B2A-907E3289CFD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADA32443-9B87-91C2-8B2A-907E3289CFD2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F1C03477-FB42-63FE-39FD-AEF02E061287} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
+		{65D9C1F2-D865-B7E6-3236-3B006EAA463E} = {F1C03477-FB42-63FE-39FD-AEF02E061287}
+		{ADA32443-9B87-91C2-8B2A-907E3289CFD2} = {65D9C1F2-D865-B7E6-3236-3B006EAA463E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8833F024-ECAA-4504-9D45-BF26DD8CA1EA}
+	EndGlobalSection
+EndGlobal
