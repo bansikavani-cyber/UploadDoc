@@ -1,14 +1,14 @@
 param sqlPassword string
 
-param location string = resourceGroup().location
+param location string = 'centralindia'
 
 // App Service Plan (LOW COST - B1)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
   name: 'prod-plan'
   location: location
   sku: {
-    name: 'B1'
-    tier: 'Basic'
+    name: 'F1'
+    tier: 'Free'
   }
 }
 

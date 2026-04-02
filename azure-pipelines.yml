@@ -33,6 +33,14 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - checkout: self
+    - bash: |
+        echo "##[section]Debug: infra/dev.bicep (first 200 lines)"
+        sed -n '1,200p' infra/dev.bicep
+        echo "##[section]Debug: grep for Compute resources (should be empty)"
+        rg "Microsoft\\.Compute" || true
+        echo "##[section]Debug: grep for networkInterfaces/virtualNetworks/publicIPAddresses (should be empty)"
+        rg "Microsoft\\.Network/(networkInterfaces|virtualNetworks|publicIPAddresses)" || true
+      displayName: 'Debug: show Bicep & confirm no VM resources'
     - task: AzureCLI@2
       displayName: 'Bicep Build, Lint, and What-If'
       inputs:
