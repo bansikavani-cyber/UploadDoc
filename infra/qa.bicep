@@ -1,3 +1,4 @@
+@secure()
 param sqlPassword string
 
 param location string = 'centralindia'

@@ -14,7 +14,7 @@ pool:
 variables:
   # kt: Set these in Azure DevOps variable groups or pipeline variables
   azureServiceConnection: 'UploadDocService'
-  location: 'eastus'
+  location: 'centralindia'
   devResourceGroup: 'dev-rg'
   qaResourceGroup: 'qa-rg'
   prodResourceGroup: 'prod-rg'
@@ -49,10 +49,6 @@ stages:
         scriptLocation: 'inlineScript'
         inlineScript: |
           set -euo pipefail
-
-          export DEV_SQL_PASSWORD="$(devSqlPassword)"
-          export QA_SQL_PASSWORD="$(qaSqlPassword)"
-          export PROD_SQL_PASSWORD="$(prodSqlPassword)"
 
           az bicep install
 
@@ -101,6 +97,10 @@ stages:
             --confirm-with-what-if --no-prompt
           echo "##[endgroup]"
           echo "creation: completed (what-if prod)"
+      env:
+        DEV_SQL_PASSWORD: $(DEV_SQL_PASSWORD)
+        QA_SQL_PASSWORD: $(QA_SQL_PASSWORD)
+        PROD_SQL_PASSWORD: $(PROD_SQL_PASSWORD)
 
 - stage: Build
   displayName: 'Build App'
@@ -161,7 +161,6 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                export DEV_SQL_PASSWORD="$(devSqlPassword)"
                 echo "##[section]Deploy Dev (App Service + SQL)"
                 echo "App Service - In Progress"
                 echo "SQL - In Progress"
@@ -174,6 +173,8 @@ stages:
                 echo "SQL - Completed"
                 echo "App Service - Completed"
                 echo "##[section]Deploy Dev Completed"
+            env:
+              DEV_SQL_PASSWORD: $(DEV_SQL_PASSWORD)
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_QA
@@ -195,7 +196,6 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                export QA_SQL_PASSWORD="$(qaSqlPassword)"
                 echo "##[section]Deploy QA (App Service + SQL)"
                 echo "App Service - In Progress"
                 echo "SQL - In Progress"
@@ -208,6 +208,8 @@ stages:
                 echo "SQL - Completed"
                 echo "App Service - Completed"
                 echo "##[section]Deploy QA Completed"
+            env:
+              QA_SQL_PASSWORD: $(QA_SQL_PASSWORD)
           # kt: Add steps to deploy backend/frontend as needed
 
 - stage: Deploy_Prod
@@ -229,7 +231,6 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 set -euo pipefail
-                export PROD_SQL_PASSWORD="$(prodSqlPassword)"
                 echo "##[section]Deploy Prod (App Service + SQL)"
                 echo "App Service - In Progress"
                 echo "SQL - In Progress"
@@ -242,5 +243,7 @@ stages:
                 echo "SQL - Completed"
                 echo "App Service - Completed"
                 echo "##[section]Deploy Prod Completed"
+            env:
+              PROD_SQL_PASSWORD: $(PROD_SQL_PASSWORD)
           # kt: Add steps to deploy backend/frontend as needed
         # kt: To require manual approval before prod deployment, set up an 'Approval and checks' gate for the 'prod' environment in Azure DevOps UI. You can set a timeout there as well.
