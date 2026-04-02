@@ -14,6 +14,7 @@ pool:
 variables:
   # kt: Set these in Azure DevOps variable groups or pipeline variables
   azureServiceConnection: 'UploadDocService'
+  location: 'eastus'
   devResourceGroup: 'dev-rg'
   qaResourceGroup: 'qa-rg'
   prodResourceGroup: 'prod-rg'
@@ -43,6 +44,11 @@ stages:
 
           az bicep install
 
+          # kt: Ensure resource groups exist before what-if (avoids CLI bug when RG missing)
+          az group create --name $(devResourceGroup) --location $(location) --only-show-errors
+          az group create --name $(qaResourceGroup) --location $(location) --only-show-errors
+          az group create --name $(prodResourceGroup) --location $(location) --only-show-errors
+
           # kt: Build (syntax check) all Bicep files
           az bicep build --file infra/dev.bicep
           az bicep build --file infra/qa.bicep
@@ -53,21 +59,24 @@ stages:
           az bicep lint --file infra/qa.bicep
           az bicep lint --file infra/prod.bicep
 
-          # kt: What-If deployment for each environment
-          az deployment group what-if \
+          # kt: Use confirm-with-what-if to avoid Azure CLI what-if bug
+          az deployment group create \
             --resource-group $(devResourceGroup) \
             --template-file infra/dev.bicep \
-            --parameters sqlPassword="$(devSqlPassword)"
+            --parameters sqlPassword="$(devSqlPassword)" \
+            --confirm-with-what-if --no-prompt
 
-          az deployment group what-if \
+          az deployment group create \
             --resource-group $(qaResourceGroup) \
             --template-file infra/qa.bicep \
-            --parameters sqlPassword="$(qaSqlPassword)"
+            --parameters sqlPassword="$(qaSqlPassword)" \
+            --confirm-with-what-if --no-prompt
 
-          az deployment group what-if \
+          az deployment group create \
             --resource-group $(prodResourceGroup) \
             --template-file infra/prod.bicep \
-            --parameters sqlPassword="$(prodSqlPassword)"
+            --parameters sqlPassword="$(prodSqlPassword)" \
+            --confirm-with-what-if --no-prompt
 
 - stage: Build
   displayName: 'Build App'
